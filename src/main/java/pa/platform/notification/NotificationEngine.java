@@ -234,7 +234,7 @@ public class NotificationEngine {
 	}
 	
 	private String getApplicationURL(Notification notif){
-		String appURL = "https://" +"loginqa.fishbowl.com" + "/#/reports/details/"+notif.getReportId();
+		String appURL = "https://" +"pa2qa.fishbowl.com" + "/#/reports/details/"+notif.getReportId();
 		logger.info("Application URL : "+appURL);
 		return appURL;
 	}
