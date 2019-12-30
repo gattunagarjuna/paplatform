@@ -73,8 +73,8 @@ public class EmailClient {
 		logger.info("notif.getNotifcationText()  " + notif.getNotifcationText());*/
 
 		com.sendgrid.Email from = new com.sendgrid.Email("qapricingstrategy@fishbowl.com");
-		//com.sendgrid.Email to = new com.sendgrid.Email(notif.getEmailAddress());;
-		com.sendgrid.Email to = new com.sendgrid.Email("ngattu_ic@fishbowl.com");
+		com.sendgrid.Email to = new com.sendgrid.Email(notif.getEmailAddress());;
+		//com.sendgrid.Email to = new com.sendgrid.Email("ngattu_ic@fishbowl.com");
 	
 		Content content = new Content("text/html", "Impact Simulator Sheet");
 		Mail mail = new Mail(from, "Impact Simulator Sheet", to, content);
