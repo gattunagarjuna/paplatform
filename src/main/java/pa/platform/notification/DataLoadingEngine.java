@@ -34,9 +34,11 @@ public class DataLoadingEngine {
 		
 		try{
 		
-		String filename= "D:/"+"ImpactSimulator"+"_"+event.getBrandId()+"_"+event.getProject_Id()+"_"+event.getScenario_Id()+"_"+new Random().nextInt()+".xls" ;
+		String filename= "/tmp/"+"ImpactSimulator"+"_"+event.getBrandId()+"_"+event.getProject_Id()+"_"+event.getScenario_Id()+"_"+new Random().nextInt()+".xls" ;
+		logger.info("File Path : "+filename);
+		logger.info("Starttime for data loading in excel file : "+System.currentTimeMillis());
 		createAndLoadImpactSimultaorWorkBook(filename,event);
-		
+		logger.info("Endtime for data loading in excel file : "+System.currentTimeMillis());
 		UserDao userDao = new UserDaoImpl();
 		UserDetails userDetails = userDao.getUserDetailsByUserId(event.getUserId());
 		Notification notif =  new Notification();
@@ -114,7 +116,8 @@ public class DataLoadingEngine {
 				
 					CallableStatement stmt1 = con.prepareCall(query1);
 					stmt1.setInt(1,startIndex);
-					stmt1.setInt(2, endIndex);
+					//stmt1.setInt(2, endIndex);
+					stmt1.setInt(2, noOfRows.intValue());
 					stmt1.setLong(3, impSimEvent.getScenario_Id().longValue());
 					stmt1.setLong(4, impSimEvent.getProject_Id().longValue());
 					stmt1.setInt(5, impSimEvent.getBrandId());
@@ -144,7 +147,8 @@ public class DataLoadingEngine {
 					
 					rs1.close();
 					stmt1.close();
-					noOfRows = noOfRows - 100;
+					//noOfRows = noOfRows - 100;
+					noOfRows = 0L;
 					//endIndex=endIndex+100;
 					startIndex = startIndex+100;
 					rowNo = sheet.getLastRowNum();
@@ -218,7 +222,8 @@ public class DataLoadingEngine {
 				CallableStatement stmt1 = con.prepareCall(query1);
 				
 				stmt1.setInt(1,startIndex);
-				stmt1.setInt(2, endIndex);
+				//stmt1.setInt(2, endIndex);
+				stmt1.setInt(2, noOfRows.intValue());
 				stmt1.setLong(3, impSimEvent.getScenario_Id().longValue());
 				stmt1.setLong(4, impSimEvent.getProject_Id().longValue());
 				stmt1.setInt(5, impSimEvent.getBrandId());
@@ -254,7 +259,8 @@ public class DataLoadingEngine {
 					
 					rs1.close();
 					stmt1.close();
-					noOfRows = noOfRows - 100;
+					//noOfRows = noOfRows - 100;
+					noOfRows = 0L;
 					startIndex = startIndex+100;
 				}while(noOfRows > 1);
 			}else{

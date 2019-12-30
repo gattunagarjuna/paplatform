@@ -68,8 +68,8 @@ public class EmailClient {
 	
 	
 	public void sendImpactSheetEMail(String fileName){
-		/*logger.info("notif.getEmailAddress()  " + notif.getEmailAddress());
-		logger.info("notif.getFromAddress()  " + notif.getFromAddress());
+		logger.info("To Email Address : " + notif.getEmailAddress());
+		/*logger.info("notif.getFromAddress()  " + notif.getFromAddress());
 		logger.info("notif.getNotifcationText()  " + notif.getNotifcationText());*/
 
 		com.sendgrid.Email from = new com.sendgrid.Email("qapricingstrategy@fishbowl.com");
