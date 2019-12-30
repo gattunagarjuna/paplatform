@@ -19,6 +19,8 @@ import org.apache.log4j.Logger;
 import pa.platform.core.DaoManager;
 import pa.platform.core.PaConfiguration;
 import pa.platform.core.PaConstants;
+import pa.platform.event.Event;
+import pa.platform.event.ImpactSimulatorEvent;
 import pa.platform.event.PaNotificationEvent;
 import pa.platform.process.PaService;
 import pa.platform.queue.impl.QueuePublisherImpl;
@@ -48,16 +50,21 @@ public class TargetingService extends PaService{
 		for(QueuePublisherImpl queue : queues){
 			try {
 				
-				List<PaNotificationEvent> events = queue.getEventsFromQueue(numberOfQueuesToProcess);
+				List<Event> events = queue.getEventsFromQueue(numberOfQueuesToProcess);
 
 				if (events.size() > 0) {
 					logger.info("Reading " + events.size() + " Events from queue!!");
-					for (PaNotificationEvent event : events) {
+					for (Event event : events) {
 						if (event != null) {
 							if (event instanceof PaNotificationEvent) {
-								logger.debug("Processing Loyalty Event Now ...");
-								paExecutorMap.get(event.getBrandId()).submit(new PaEventProcessor(event));
+								PaNotificationEvent panotoficationEvent = (PaNotificationEvent) event;
+								logger.debug("Processing PaNotification Event Now ...");
+								paExecutorMap.get(panotoficationEvent.getBrandId()).submit(new PaEventProcessor(panotoficationEvent));
 								
+							}else if(event instanceof ImpactSimulatorEvent){
+								ImpactSimulatorEvent impSimulatorEvent = (ImpactSimulatorEvent) event;
+								logger.debug("Processing ImpactSimulator Event Now ...");
+								paExecutorMap.get(impSimulatorEvent.getBrandId()).submit(new ImpactSimulatorEventProcessor(impSimulatorEvent));
 							}
 							
 						}
@@ -84,11 +91,14 @@ public class TargetingService extends PaService{
 				if(queueName != null && queueName.trim().length() > 0){
 					QueuePublisherImpl queue = new QueuePublisherImpl();
 					queues.add(queue);
+					//String queueurl = queue.createQueue("testimpqueue");
 					String queueurl = queue.createQueue(queueName);
 					logger.info("Servicing queue: " + queueurl);
 					/*queue.sendEventToQueue("{\"action\":\"reportrequestevent\",\"brandid\":\"1036\",\"reportid\":\"256\",\"currentreportstage\":\"6\",\"reporttype\":\"3\",\"userid\":\"39908\",\"username\":\"abhinavAU\"}");
 					queue.sendEventToQueue("{\"action\":\"reportstatusevent\",\"brandid\":\"1036\",\"reportid\":\"252\",\"currentreportstage\":\"1\",\"reporttype\":\"3\",\"userid\":\"39908\",\"username\":\"abhinavAU\",\"newreportstage\":\"2\"}");
 					queue.sendEventToQueue("{\"action\":\"reportstatusevent\",\"brandid\":\"1036\",\"reportid\":\"252\",\"currentreportstage\":\"1\",\"reporttype\":\"3\",\"userid\":\"39908\",\"username\":\"abhinavAU\",\"newreportstage\":\"2\"}");*/
+					
+					//queue.sendEventToQueue("{\"action\":\"impactsimulatorevent\",\"brandid\":\"1036\",\"userid\":\"39908\",\"username\":\"abhinavAU\",\"projectid\":\"1\",\"scenarioid\":\"1\"}");
 				}
 			}
 		

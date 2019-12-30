@@ -84,5 +84,40 @@ public class DaoManager {
 			}
 		}
 	}
+	
+public static Connection getImpactSimulatorConnection() {
+		
+		Connection conn = null;
+		BasicDataSource ds = null;
+		String dburl;
+		String dbuser;
+		String dbpwd;
+	
+		try {	
+			ds =  new BasicDataSource();
+			dburl = PaConfiguration.getInstance().getConfiguration("impsimdburl");//"jdbc:sqlserver://QA-DB1.fishbowl.com\\SQL05QA";
+			dbuser = PaConfiguration.getInstance().getConfiguration("impsimdbuser");//"developer";
+			dbpwd = PaConfiguration.getInstance().getConfiguration("impsimdbpwd");//"F1shb0wl!";
+			//maxDBconn = ClpConfiguration.getStringProperty("FISHBOWL_MASTER_DB_MAXCON");
+			//ds.setDriverClassName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+			ds.setDriverClassName(PaConfiguration.getInstance().getConfiguration("driverclassname"));
+			ds.setUrl(dburl);
+			ds.setUsername(dbuser);
+			ds.setPassword(dbpwd);
+			ds.setMaxIdle(10);
+			ds.setMaxWaitMillis(90000);
+			ds.setValidationQuery("SELECT 1");
+			ds.setTestOnBorrow(true);
+			ds.setTestOnReturn(false);
+			ds.setTestWhileIdle(true);
+			conn= ds.getConnection();
+		}catch(Exception e){
+			logger.error(e.getMessage(), e.fillInStackTrace());
+			logger.debug(ExceptionUtils.getStackTrace(e));
+		}
+		Instant start = Instant.now();
+		return conn;
+		
+	}
 
 }
