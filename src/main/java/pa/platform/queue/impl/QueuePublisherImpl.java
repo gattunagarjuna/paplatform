@@ -12,12 +12,16 @@ import org.json.JSONObject;
 
 import pa.platform.core.PaConfiguration;
 import pa.platform.core.PaConstants;
+import pa.platform.event.Event;
+import pa.platform.event.ImpactSimulatorEvent;
 import pa.platform.event.PaNotificationEvent;
 import pa.platform.event.ReportCommentEvent;
 import pa.platform.event.ReportRequestEvent;
 import pa.platform.event.ReportStatusEvent;
 import pa.platform.queue.Messages;
 import pa.platform.queue.QueuePublisher;
+
+
 
 
 
@@ -97,16 +101,16 @@ public class QueuePublisherImpl implements QueuePublisher {
 		}
 	}
 	
-	private List<PaNotificationEvent> getEventsFromQueueMethod(int numberOfMessages){
+	private List<Event> getEventsFromQueueMethod(int numberOfMessages){
 
-		List<PaNotificationEvent> events = new ArrayList<PaNotificationEvent>();
+		List<Event> events = new ArrayList<Event>();
 		//Messages messages = new Messages();
 		try {
 			for (CloudQueueMessage message : queue.retrieveMessages(numberOfMessages, 30, null, null)) {
 				logger.debug(message.getMessageContentAsString());
 				try {
 					JSONObject tempobj = new JSONObject(message.getMessageContentAsString());
-					PaNotificationEvent event = null;
+					Event event = null;
 					String action = null;
 					if(tempobj.has("action")){
 					action = tempobj.getString("action");
@@ -136,6 +140,10 @@ public class QueuePublisherImpl implements QueuePublisher {
 						event = new ReportStatusEvent(action, brandId, tempobj.getInt("reportid"),
 								tempobj.getInt("currentreportstage"), tempobj.getInt("reporttype"), tempobj.getInt("userid"),tempobj.getString("username"),tempobj.getInt("newreportstage"));
 					}
+					if(action.equalsIgnoreCase("IMPACTSIMULATOREVENT")){
+						event = new ImpactSimulatorEvent(action,brandId,tempobj.getInt("userid"), tempobj.getBigInteger("projectid"), 
+								tempobj.getBigInteger("scenarioid"));
+					}
 					if (event != null){
 						events.add(event);
 					}
@@ -157,7 +165,7 @@ public class QueuePublisherImpl implements QueuePublisher {
 	}
 
 	@Override
-	public List<PaNotificationEvent> getEventsFromQueue() {
+	public List<Event> getEventsFromQueue() {
 		return this.getEventsFromQueueMethod(1);
 	}
 
@@ -174,7 +182,7 @@ public class QueuePublisherImpl implements QueuePublisher {
 
 	
 	@Override
-	public List<PaNotificationEvent> getEventsFromQueue(int numberOfMessages) {
+	public List<Event> getEventsFromQueue(int numberOfMessages) {
 		return this.getEventsFromQueueMethod(numberOfMessages);
 	}
 

@@ -1,6 +1,6 @@
 package pa.platform.event;
 
-public class PaNotificationEvent {
+public class PaNotificationEvent extends Event{
 
 	public int outCount = 1;
 	public int brandId;
