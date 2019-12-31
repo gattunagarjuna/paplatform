@@ -62,6 +62,7 @@ public class TargetingService extends PaService{
 								paExecutorMap.get(panotoficationEvent.getBrandId()).submit(new PaEventProcessor(panotoficationEvent));
 								
 							}else if(event instanceof ImpactSimulatorEvent){
+								logger.info("reading impact simulator event");
 								ImpactSimulatorEvent impSimulatorEvent = (ImpactSimulatorEvent) event;
 								logger.debug("Processing ImpactSimulator Event Now ...");
 								paExecutorMap.get(impSimulatorEvent.getBrandId()).submit(new ImpactSimulatorEventProcessor(impSimulatorEvent));
