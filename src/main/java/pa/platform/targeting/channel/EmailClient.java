@@ -1,19 +1,19 @@
 package pa.platform.targeting.channel;
 
-import java.io.ByteArrayOutputStream;
+//import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 
+
+
+
+
+
 import pa.platform.core.PaConfiguration;
-import pa.platform.model.Email;
-import pa.platform.model.EmailAttachment;
 import pa.platform.model.Notification;
 
 import com.sendgrid.Attachments;
@@ -23,7 +23,6 @@ import com.sendgrid.Method;
 import com.sendgrid.Request;
 import com.sendgrid.Response;
 import com.sendgrid.SendGrid;
-import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
 
 public class EmailClient {
 	
@@ -153,7 +152,7 @@ public class EmailClient {
     }
 	
 
-	private ByteArrayOutputStream getStreamOnData(String fileName) {
+	/*private ByteArrayOutputStream getStreamOnData(String fileName) {
 		FileInputStream fis;
 		 ByteArrayOutputStream bos = null;
 		try {
@@ -169,5 +168,5 @@ public class EmailClient {
 		            
 		}return bos;
 	
-		}
+		}*/
 	}
