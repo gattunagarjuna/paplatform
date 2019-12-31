@@ -141,8 +141,11 @@ public class QueuePublisherImpl implements QueuePublisher {
 								tempobj.getInt("currentreportstage"), tempobj.getInt("reporttype"), tempobj.getInt("userid"),tempobj.getString("username"),tempobj.getInt("newreportstage"));
 					}
 					if(action.equalsIgnoreCase("IMPACTSIMULATOREVENT")){
+						logger.info("Action : "+action);
+						logger.info("Forming impact simulator event");
 						event = new ImpactSimulatorEvent(action,brandId,tempobj.getInt("userid"), tempobj.getBigInteger("projectid"), 
 								tempobj.getBigInteger("scenarioid"));
+						logger.info("impact simulator event is formed");
 					}
 					if (event != null){
 						events.add(event);
