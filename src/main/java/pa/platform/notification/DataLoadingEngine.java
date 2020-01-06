@@ -7,9 +7,13 @@ import java.sql.ResultSet;
 import java.util.Random;
 
 import org.apache.log4j.Logger;
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFFont;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.IndexedColors;
 
 import pa.platform.core.DaoManager;
 import pa.platform.dao.UserDao;
@@ -60,6 +64,9 @@ public class DataLoadingEngine {
 		logger.info("start loading Menu_Item_Tier_View data");
 		createAndLoadMenuTierViewWorkSheet(con, fileName, impSimEvent,hwb);
 		logger.info("Menu_Item_Tier_View data has been loaded!");
+		logger.info("Start Loading Summary View");
+		createAndLoadSummaryViewWorkSheet(con, fileName, impSimEvent,hwb);
+		logger.info("Summary View has been loaded");
 		con.close();
 		
 		
@@ -163,8 +170,144 @@ public class DataLoadingEngine {
 		
 	}
 	
-	private void createAndLoadSummaryViewWorkSheet(Connection con,String fileName,ImpactSimulatorEvent impSimEvent) {
-		//Awaiting for the query	
+	
+	
+	private void createAndLoadSummaryViewWorkSheet(Connection con, String fileName,ImpactSimulatorEvent impSimEvent, HSSFWorkbook hwb) {
+		
+		
+		HSSFCellStyle style = hwb.createCellStyle();
+		style.setFillBackgroundColor(IndexedColors.YELLOW.getIndex());
+		HSSFFont font = hwb.createFont();
+		font.setBold(true);
+		font.setFontHeightInPoints((short)12);
+		font.setColor(IndexedColors.BLUE.getIndex());
+		
+		style.setFont(font);                 
+		
+		try{
+			int i =1;
+		
+		logger.info("start loading Tier Shift Summary View");
+		HSSFSheet summaryTierViewSheet =  hwb.createSheet("Summary");
+		String summaryTierViewQuery = "{CALL dbo.SummaryTierView(?,?,?)}";
+		CallableStatement summaryTierViewStmt = con.prepareCall(summaryTierViewQuery);
+		
+		summaryTierViewStmt.setLong(1, impSimEvent.getScenario_Id().longValue());
+		summaryTierViewStmt.setLong(2, impSimEvent.getProject_Id().longValue());
+		summaryTierViewStmt.setInt(3, impSimEvent.getBrandId());
+		
+		ResultSet summaryTierViewRs = summaryTierViewStmt.executeQuery();
+		
+		if(summaryTierViewRs.next()){
+			
+			HSSFRow summaryTierViewRowTitle=   summaryTierViewSheet.createRow((short)0);
+			HSSFCell tierShiftCell = summaryTierViewRowTitle.createCell((short) 0);
+			tierShiftCell.setCellValue("Tier Shift");
+			tierShiftCell.setCellStyle(style);
+			i=i+2;
+			HSSFRow summaryTierViewRowHead=   summaryTierViewSheet.createRow((short)i);
+			summaryTierViewRowHead.createCell((short) 0).setCellValue("Original Tier");
+			summaryTierViewRowHead.createCell((short) 1).setCellValue("New Tier");
+			summaryTierViewRowHead.createCell((short) 2).setCellValue("New Store Count");
+			summaryTierViewRowHead.createCell((short) 3).setCellValue("Impact By Tier");
+			summaryTierViewRowHead.setRowStyle(style);
+			//summaryTierViewRowHead.getRowStyle().setFillBackgroundColor(IndexedColors.DARK_BLUE.getIndex());
+			i++;
+		while(summaryTierViewRs.next()){
+			HSSFRow summaryTierViewRow=   summaryTierViewSheet.createRow((short)i);
+			summaryTierViewRow.createCell((short) 0).setCellValue(summaryTierViewRs.getString("Current_Tier"));
+			summaryTierViewRow.createCell((short) 1).setCellValue(summaryTierViewRs.getString("Proposed_Tier"));
+			summaryTierViewRow.createCell((short) 2).setCellValue(summaryTierViewRs.getDouble("Count_Of_Stores"));
+			summaryTierViewRow.createCell((short) 3).setCellValue(summaryTierViewRs.getDouble("Impact_by_Tier"));
+			i++;
+		}
+		i = i+2;
+		}
+		
+		logger.info("start loading Categories Summary View");
+		String summaryCategoriesQuery = "{CALL dbo.SummaryCategoryView(?,?,?)}";
+		CallableStatement summaryCategoriesStmt = con.prepareCall(summaryCategoriesQuery);
+		summaryCategoriesStmt.setLong(1, impSimEvent.getScenario_Id().longValue());
+		summaryCategoriesStmt.setLong(2, impSimEvent.getProject_Id().longValue());
+		summaryCategoriesStmt.setInt(3, impSimEvent.getBrandId());
+		
+		ResultSet summaryCategoriesRs = summaryCategoriesStmt.executeQuery();
+		
+		if(summaryCategoriesRs.next()){
+			
+			HSSFRow summaryCategoriesViewRowTitle=   summaryTierViewSheet.createRow((short)i);
+			//HSSFCell categoryCell = summaryCategoriesViewRowTitle.createCell((short) 0).setCellValue("Categories");
+			HSSFCell categoryCell = summaryCategoriesViewRowTitle.createCell((short) 0);
+			categoryCell.setCellValue("Categories");
+			categoryCell.setCellStyle(style);
+			i=i+2;
+			HSSFRow summaryCategoriesViewRowHead=   summaryTierViewSheet.createRow((short)i);
+			summaryCategoriesViewRowHead.createCell((short) 0).setCellValue("Category");
+			summaryCategoriesViewRowHead.createCell((short) 1).setCellValue("%of Total Impact");
+			//summaryCategoriesViewRowHead.getRowStyle().setFillBackgroundColor(IndexedColors.DARK_BLUE.getIndex());
+			i++;
+		
+		while(summaryCategoriesRs.next()){
+			HSSFRow summaryCategoriesViewRow=   summaryTierViewSheet.createRow((short)i);
+			summaryCategoriesViewRow.createCell((short) 0).setCellValue(summaryCategoriesRs.getString("Cat3"));
+			summaryCategoriesViewRow.createCell((short) 1).setCellValue(summaryCategoriesRs.getDouble("Percet_Of_Total_Impact"));
+			i++;
+		}
+		i = i+2;
+		summaryCategoriesRs.close();
+		summaryCategoriesStmt.close();
+		}
+		
+		logger.info("start loading Price Sensitivity Summary View");
+		String summaryPriceSensitivityQuery = "{CALL dbo.SummaryPriceSensitivity(?,?,?)}";
+		CallableStatement summaryPriceSensitivityStmt = con.prepareCall(summaryPriceSensitivityQuery);
+		summaryPriceSensitivityStmt.setLong(1, impSimEvent.getScenario_Id().longValue());
+		summaryPriceSensitivityStmt.setLong(2, impSimEvent.getProject_Id().longValue());
+		summaryPriceSensitivityStmt.setInt(3, impSimEvent.getBrandId());
+		
+		ResultSet summaryPriceSensitivityStmtRs = summaryPriceSensitivityStmt.executeQuery();
+
+		if(summaryPriceSensitivityStmtRs.next()){
+			HSSFRow summaryPriceSensitivityViewRowTitle=   summaryTierViewSheet.createRow((short)i);
+			//summaryPriceSensitivityViewRowTitle.createCell((short) 0).setCellValue("Price Sensitivity");
+			HSSFCell priceSensitivityCell = summaryPriceSensitivityViewRowTitle.createCell((short) 0);
+			priceSensitivityCell.setCellValue("Price Sensitivity");
+			priceSensitivityCell.setCellStyle(style);
+			i=i+2;
+			HSSFRow summaryPriceSensitivityViewRowHead=   summaryTierViewSheet.createRow((short)i);
+			summaryPriceSensitivityViewRowHead.createCell((short) 0).setCellValue("Product Price Sensitivity");
+			summaryPriceSensitivityViewRowHead.createCell((short) 1).setCellValue("Quantity%");
+			summaryPriceSensitivityViewRowHead.createCell((short) 2).setCellValue("Quantity");
+			summaryPriceSensitivityViewRowHead.createCell((short) 3).setCellValue("Original Sales$");
+			summaryPriceSensitivityViewRowHead.createCell((short) 4).setCellValue("New Sales$");
+			summaryPriceSensitivityViewRowHead.createCell((short) 5).setCellValue("Sales Impact$");
+			summaryPriceSensitivityViewRowHead.createCell((short) 6).setCellValue("%Impact");
+			summaryPriceSensitivityViewRowHead.createCell((short) 7).setCellValue("Impact% of Total");
+			
+			//summaryPriceSensitivityViewRowHead.getRowStyle().setFillBackgroundColor(IndexedColors.DARK_BLUE.getIndex());
+			i++;
+			while(summaryPriceSensitivityStmtRs.next()){
+				HSSFRow summaryPriceSensitivityViewRow=   summaryTierViewSheet.createRow((short)i);
+				summaryPriceSensitivityViewRow.createCell((short) 0).setCellValue(summaryPriceSensitivityStmtRs.getString("Product_Price_Sensitivity"));
+				summaryPriceSensitivityViewRow.createCell((short) 1).setCellValue(summaryPriceSensitivityStmtRs.getDouble("Quantity_Percent"));
+				summaryPriceSensitivityViewRow.createCell((short) 2).setCellValue(summaryPriceSensitivityStmtRs.getLong("Quantity"));
+				summaryPriceSensitivityViewRow.createCell((short) 3).setCellValue(summaryPriceSensitivityStmtRs.getDouble("Original_Sales"));
+				summaryPriceSensitivityViewRow.createCell((short) 4).setCellValue(summaryPriceSensitivityStmtRs.getDouble("New_Sales"));
+				summaryPriceSensitivityViewRow.createCell((short) 5).setCellValue(summaryPriceSensitivityStmtRs.getDouble("Sales_Impact"));
+				summaryPriceSensitivityViewRow.createCell((short) 6).setCellValue(summaryPriceSensitivityStmtRs.getDouble("Sales_Impact_Percent"));
+				summaryPriceSensitivityViewRow.createCell((short) 7).setCellValue(summaryPriceSensitivityStmtRs.getDouble("Total_Impact_Percent"));
+				i++;
+			}
+		}
+		FileOutputStream fileOut =  new FileOutputStream(fileName);
+		hwb.write(fileOut);
+		fileOut.close();
+		summaryPriceSensitivityStmtRs.close();
+		summaryPriceSensitivityStmt.close();
+		
+	}catch(Exception ex){
+		logger.info(ex.getMessage());
+	}
 	}
 	
 	private void createAndLoadMenuTierViewWorkSheet(Connection con,String fileName,ImpactSimulatorEvent impSimEvent, HSSFWorkbook hwb) {
