@@ -43,7 +43,12 @@ public class DataLoadingEngine {
 		
 		try{
 			ImpactSimulatorDao impactSimulatorDao = new ImpactSimulatorDaoImpl();
-			List<BigInteger> scenarioIds = impactSimulatorDao.getScenarioIds(event.getProject_Id(), event.getBrandId());
+			List<BigInteger> scenarioIds = new ArrayList<BigInteger>();
+			if(event.getScenario_Id()== BigInteger.valueOf(0)){
+				scenarioIds = impactSimulatorDao.getScenarioIds(event.getProject_Id(), event.getBrandId());
+			}else{
+				scenarioIds.add(event.getScenario_Id());
+			}
 			logger.info("Fetched associated ScenarioIds for the provided projectId");
 			List<String> filePaths = new ArrayList<String>();
 			if(!scenarioIds.isEmpty()){
