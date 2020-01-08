@@ -4,9 +4,11 @@ package pa.platform.targeting.channel;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
+
 
 
 
@@ -66,7 +68,7 @@ public class EmailClient {
 	}
 	
 	
-	public void sendImpactSheetEMail(String fileName){
+	public void sendImpactSheetEMail(List<String> filePaths){
 		logger.info("To Email Address : " + notif.getEmailAddress());
 		/*logger.info("notif.getFromAddress()  " + notif.getFromAddress());
 		logger.info("notif.getNotifcationText()  " + notif.getNotifcationText());*/
@@ -95,13 +97,17 @@ public class EmailClient {
 		}*/
 		
 		
-		byte[] byteArray = readBytesFromFile(new File(fileName));
-		String valueDecoded = Base64.encodeBase64String(byteArray);
-		Attachments attachments = new Attachments();
-		attachments.setContent(valueDecoded);
-		attachments.setType("xls");
-		attachments.setFilename("ImpactSimulator.xls");
-		mail.addAttachments(attachments);
+		if(!filePaths.isEmpty()){
+			for(String filePath : filePaths){
+				byte[] byteArray = readBytesFromFile(new File(filePath));
+				String valueDecoded = Base64.encodeBase64String(byteArray);
+				Attachments attachments = new Attachments();
+				attachments.setContent(valueDecoded);
+				attachments.setType("xls");
+				attachments.setFilename("ImpactSimulator.xls");
+				mail.addAttachments(attachments);
+			}
+		}
 			
 		SendGrid sg = new SendGrid(PaConfiguration.getInstance().getConfiguration("sendgridapikey"));
 		Request request = new Request(); 

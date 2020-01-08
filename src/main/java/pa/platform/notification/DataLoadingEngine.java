@@ -1,9 +1,12 @@
 package pa.platform.notification;
 
 import java.io.FileOutputStream;
+import java.math.BigInteger;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import org.apache.log4j.Logger;
@@ -16,7 +19,9 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.IndexedColors;
 
 import pa.platform.core.DaoManager;
+import pa.platform.dao.ImpactSimulatorDao;
 import pa.platform.dao.UserDao;
+import pa.platform.dao.impl.ImpactSimulatorDaoImpl;
 import pa.platform.dao.impl.UserDaoImpl;
 import pa.platform.event.ImpactSimulatorEvent;
 import pa.platform.model.Notification;
@@ -37,20 +42,29 @@ public class DataLoadingEngine {
 	public void startLoadingData(){
 		
 		try{
-		
-		String filename= "/tmp/"+"ImpactSimulator"+"_"+event.getBrandId()+"_"+event.getProject_Id()+"_"+event.getScenario_Id()+"_"+new Random().nextInt()+".xls" ;
-		logger.info("File Path : "+filename);
-		logger.info("Starttime for data loading in excel file : "+System.currentTimeMillis());
-		createAndLoadImpactSimultaorWorkBook(filename,event);
-		logger.info("Endtime for data loading in excel file : "+System.currentTimeMillis());
-		UserDao userDao = new UserDaoImpl();
-		UserDetails userDetails = userDao.getUserDetailsByUserId(event.getUserId());
-		Notification notif =  new Notification();
-		notif.setEmailAddress(userDetails.getEmail());
-		EmailClient emailClient =  new EmailClient(notif);
-		emailClient.sendImpactSheetEMail(filename);
+			ImpactSimulatorDao impactSimulatorDao = new ImpactSimulatorDaoImpl();
+			List<BigInteger> scenarioIds = impactSimulatorDao.getScenarioIds(event.getProject_Id(), event.getBrandId());
+			logger.info("Fetched associated ScenarioIds for the provided projectId");
+			List<String> filePaths = new ArrayList<String>();
+			if(!scenarioIds.isEmpty()){
+				for(BigInteger scenarioId : scenarioIds){
+					String filename= "/tmp/"+"ImpactSimulator"+"_"+event.getBrandId()+"_"+event.getProject_Id()+"_"+event.getScenario_Id()+"_"+new Random().nextInt()+".xls" ;
+					filePaths.add(filename);
+					logger.info("File Path : "+filename);
+					logger.info("Starttime for data loading in excel file : "+System.currentTimeMillis());
+					event.setScenario_Id(scenarioId);
+					createAndLoadImpactSimultaorWorkBook(filename,event);
+					logger.info("Endtime for data loading in excel file : "+System.currentTimeMillis());
+				}
+			}
+			UserDao userDao = new UserDaoImpl();
+			UserDetails userDetails = userDao.getUserDetailsByUserId(event.getUserId());
+			Notification notif =  new Notification();
+			notif.setEmailAddress(userDetails.getEmail());
+			EmailClient emailClient =  new EmailClient(notif);
+			emailClient.sendImpactSheetEMail(filePaths);
 		}catch(Exception ex){
-			
+			logger.info("some exception occured while copying simulator data to excel");
 		}
 	}
 	
