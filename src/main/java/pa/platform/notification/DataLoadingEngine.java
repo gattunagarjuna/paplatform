@@ -45,15 +45,19 @@ public class DataLoadingEngine {
 			ImpactSimulatorDao impactSimulatorDao = new ImpactSimulatorDaoImpl();
 			List<BigInteger> scenarioIds = new ArrayList<BigInteger>();
 			if(event.getScenario_Id()== BigInteger.valueOf(0)){
+				logger.info("Fetched associated ScenarioIds for the provided projectId");
 				scenarioIds = impactSimulatorDao.getScenarioIds(event.getProject_Id(), event.getBrandId());
 			}else{
+				logger.info("Add associated ScenarioIds for the provided projectId");
 				scenarioIds.add(event.getScenario_Id());
 			}
-			logger.info("Fetched associated ScenarioIds for the provided projectId");
+		
+			logger.info("scenarioIds size "+scenarioIds.size());
 			List<String> filePaths = new ArrayList<String>();
 			if(!scenarioIds.isEmpty()){
 				for(BigInteger scenarioId : scenarioIds){
-					String filename= "/tmp/"+"ImpactSimulator"+"_"+event.getBrandId()+"_"+event.getProject_Id()+"_"+event.getScenario_Id()+"_"+new Random().nextInt()+".xls" ;
+					logger.info("scenarioId =  "+scenarioId);
+					String filename= "/tmp/"+"ImpactSimulator"+"_"+event.getBrandId()+"_"+event.getProject_Id()+"_"+scenarioId+"_"+new Random().nextInt()+".xls" ;
 					filePaths.add(filename);
 					logger.info("File Path : "+filename);
 					logger.info("Starttime for data loading in excel file : "+System.currentTimeMillis());
@@ -62,6 +66,7 @@ public class DataLoadingEngine {
 					logger.info("Endtime for data loading in excel file : "+System.currentTimeMillis());
 				}
 			}
+			logger.info("filePaths size "+filePaths.size());
 			UserDao userDao = new UserDaoImpl();
 			UserDetails userDetails = userDao.getUserDetailsByUserId(event.getUserId());
 			Notification notif =  new Notification();
@@ -77,6 +82,7 @@ public class DataLoadingEngine {
 		try{
 		HSSFWorkbook hwb=new HSSFWorkbook();
 		Connection con = DaoManager.getImpactSimulatorConnection();
+		logger.info("Event details = " +impSimEvent.getBrandId()+""+impSimEvent.getProject_Id()+""+impSimEvent.getScenario_Id());
 		logger.info("start loading Store_Tier_View data");
 		createAndLoadStoreTierViewWorkSheet(con,fileName,impSimEvent,hwb);
 		logger.info("Store_Tier_View data has been loaded!");
