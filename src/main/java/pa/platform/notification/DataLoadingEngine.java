@@ -44,7 +44,7 @@ public class DataLoadingEngine {
 		try{
 			ImpactSimulatorDao impactSimulatorDao = new ImpactSimulatorDaoImpl();
 			List<BigInteger> scenarioIds = new ArrayList<BigInteger>();
-			if(event.getScenario_Id()== BigInteger.valueOf(0)){
+			if(event.getScenario_Id().intValue()==0){
 				logger.info("Fetched associated ScenarioIds for the provided projectId");
 				scenarioIds = impactSimulatorDao.getScenarioIds(event.getProject_Id(), event.getBrandId());
 			}else{
