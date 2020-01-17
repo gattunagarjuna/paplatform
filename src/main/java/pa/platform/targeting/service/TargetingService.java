@@ -122,8 +122,9 @@ public class TargetingService extends PaService{
 			while (rs.next()) {
 				Integer brandId = rs.getInt("BrandId");
 				Integer noOfThreads = rs.getInt("NumberOfThreads");
-				String queueName = "paqaqueue_notification_"+brandId;
-				if(!paExecutorMap.containsKey(queueName)){
+				//String queueName = "paqaqueue_notification_"+brandId;
+				String queueName = rs.getString("QueueName");
+				if(!paQueueNames.contains(queueName)){
 					paExecutorMap.put(brandId, Executors.newFixedThreadPool(noOfThreads));
 				}
 				paQueueNames.add(rs.getString("QueueName"));
