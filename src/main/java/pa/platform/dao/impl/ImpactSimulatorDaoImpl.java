@@ -30,15 +30,17 @@ public class ImpactSimulatorDaoImpl implements ImpactSimulatorDao{
 			preparedStatement = connection.prepareStatement(query);
 			preparedStatement.setLong(1, projectId.longValue());
 			preparedStatement.setInt(2, brandId);
+			logger.info("projectId and brandId from query = "+projectId+" "+brandId);
 			rs = preparedStatement.executeQuery();
 			while(rs.next()){
 				
 				Long scenarioId = rs.getLong("ScenarioId");
 				scenarioIds.add(BigInteger.valueOf(scenarioId));
+				logger.info("Getting scenarioId from query = "+scenarioId);
 			}
 			
 		}catch(Exception ex){
-			logger.info("Exception occured while fetching scenarioIds for provided projectId");
+			logger.error("Exception occured while fetching scenarioIds for provided projectId");
 		}finally{
 	
 				DaoManager.close(rs);
