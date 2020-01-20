@@ -15,6 +15,7 @@ import org.apache.log4j.Logger;
 
 
 
+
 import pa.platform.core.PaConfiguration;
 import pa.platform.model.Notification;
 
@@ -68,7 +69,7 @@ public class EmailClient {
 	}
 	
 	
-	public void sendImpactSheetEMail(List<String> filePaths){
+	public void sendImpactSheetEMail(List<String> filePaths, List<String> fileNames){
 		logger.info("To Email Address : " + notif.getEmailAddress());
 		/*logger.info("notif.getFromAddress()  " + notif.getFromAddress());
 		logger.info("notif.getNotifcationText()  " + notif.getNotifcationText());*/
@@ -97,15 +98,17 @@ public class EmailClient {
 		}*/
 		
 		
-		if(!filePaths.isEmpty()){
+		if(!filePaths.isEmpty() && !fileNames.isEmpty()){
+			int i = 0;
 			for(String filePath : filePaths){
 				byte[] byteArray = readBytesFromFile(new File(filePath));
 				String valueDecoded = Base64.encodeBase64String(byteArray);
 				Attachments attachments = new Attachments();
 				attachments.setContent(valueDecoded);
 				attachments.setType("xls");
-				attachments.setFilename("ImpactSimulator.xls");
+				attachments.setFilename(fileNames.get(i));
 				mail.addAttachments(attachments);
+				i=i+1;
 			}
 		}
 			
