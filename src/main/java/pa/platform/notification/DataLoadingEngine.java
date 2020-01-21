@@ -54,15 +54,17 @@ public class DataLoadingEngine {
 		
 			logger.info("scenarioIds size "+scenarioIds.size());
 			List<String> filePaths = new ArrayList<String>();
+			List<String> fileNames = new ArrayList<String>();
 			if(!scenarioIds.isEmpty()){
 				for(BigInteger scenarioId : scenarioIds){
 					logger.info("scenarioId =  "+scenarioId);
-					String filename= "/tmp/"+"ImpactSimulator"+"_"+event.getBrandId()+"_"+event.getProject_Id()+"_"+scenarioId+"_"+new Random().nextInt()+".xls" ;
-					filePaths.add(filename);
-					logger.info("File Path : "+filename);
+					fileNames.add("ImpactSimulator"+"_"+event.getBrandId()+"_"+event.getProject_Id()+"_"+scenarioId);
+					String filePath= "/tmp/"+"ImpactSimulator"+"_"+event.getBrandId()+"_"+event.getProject_Id()+"_"+scenarioId+"_"+new Random().nextInt()+".xls" ;
+					filePaths.add(filePath);
+					logger.info("File Path : "+filePath);
 					logger.info("Starttime for data loading in excel file : "+System.currentTimeMillis());
 					event.setScenario_Id(scenarioId);
-					createAndLoadImpactSimultaorWorkBook(filename,event);
+					createAndLoadImpactSimultaorWorkBook(filePath,event);
 					logger.info("Endtime for data loading in excel file : "+System.currentTimeMillis());
 				}
 			}
@@ -72,7 +74,7 @@ public class DataLoadingEngine {
 			Notification notif =  new Notification();
 			notif.setEmailAddress(userDetails.getEmail());
 			EmailClient emailClient =  new EmailClient(notif);
-			emailClient.sendImpactSheetEMail(filePaths);
+			emailClient.sendImpactSheetEMail(filePaths,fileNames);
 		}catch(Exception ex){
 			logger.info("some exception occured while copying simulator data to excel");
 		}
