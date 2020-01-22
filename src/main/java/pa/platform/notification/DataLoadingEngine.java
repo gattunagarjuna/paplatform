@@ -1,7 +1,10 @@
 package pa.platform.notification;
 
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -41,6 +44,7 @@ public class DataLoadingEngine {
 	
 	public void startLoadingData(){
 		
+		List<String> filePaths = new ArrayList<String>();
 		try{
 			ImpactSimulatorDao impactSimulatorDao = new ImpactSimulatorDaoImpl();
 			List<BigInteger> scenarioIds = new ArrayList<BigInteger>();
@@ -53,7 +57,7 @@ public class DataLoadingEngine {
 			}
 		
 			logger.info("scenarioIds size "+scenarioIds.size());
-			List<String> filePaths = new ArrayList<String>();
+			
 			List<String> fileNames = new ArrayList<String>();
 			if(!scenarioIds.isEmpty()){
 				for(BigInteger scenarioId : scenarioIds){
@@ -77,6 +81,15 @@ public class DataLoadingEngine {
 			emailClient.sendImpactSheetEMail(filePaths,fileNames);
 		}catch(Exception ex){
 			logger.info("some exception occured while copying simulator data to excel");
+		}finally{
+			for(String filePath : filePaths){
+				try {
+					Files.deleteIfExists(Paths.get(filePath));
+				} catch (IOException e) {
+					logger.info("Exception occured while deleting a file in path : "+filePath);
+				}
+			}
+		logger.info("files deleted successfully ");	
 		}
 	}
 	
