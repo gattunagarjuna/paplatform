@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.CallableStatement;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +22,9 @@ import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.IndexedColors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import pa.platform.core.DaoManager;
 import pa.platform.dao.ImpactSimulatorDao;
 import pa.platform.dao.UserDao;
@@ -29,7 +33,9 @@ import pa.platform.dao.impl.UserDaoImpl;
 import pa.platform.event.ImpactSimulatorEvent;
 import pa.platform.model.Notification;
 import pa.platform.model.UserDetails;
+import pa.platform.queue.impl.QueuePublisherImpl;
 import pa.platform.targeting.channel.EmailClient;
+import pa.platform.targeting.exception.ProjectImportException;
 
 public class DataLoadingEngine {
 	
@@ -79,8 +85,11 @@ public class DataLoadingEngine {
 			notif.setEmailAddress(userDetails.getEmail());
 			EmailClient emailClient =  new EmailClient(notif);
 			emailClient.sendImpactSheetEMail(filePaths,fileNames);
+		}catch(ProjectImportException ex){
+			sendEventToQueue(this.event);
 		}catch(Exception ex){
 			logger.info("some exception occured while copying simulator data to excel");
+			sendEventToQueue(this.event);
 		}finally{
 			for(String filePath : filePaths){
 				try {
@@ -92,8 +101,24 @@ public class DataLoadingEngine {
 		logger.info("files deleted successfully ");	
 		}
 	}
+
+	private void sendEventToQueue(ImpactSimulatorEvent event){
+		try{
+			QueuePublisherImpl queue = new QueuePublisherImpl();
+			ObjectMapper Obj = new ObjectMapper(); 
+			String eventMessage = Obj.writeValueAsString(this.event);
+			logger.info("event : "+eventMessage);
+			String queueName = fetchPaQueueNameFromDB(this.event);
+			String queueUrl = queue.createQueue(queueName);
+			logger.info("Queue URL : "+queueUrl);
+			queue.sendEventToQueue(eventMessage);
+		}catch(Exception ex){
+			logger.info("Excpetion occured while resending the event to the queue");
+			logger.info(ex.getStackTrace());
+		}
+	}
 	
-	private void createAndLoadImpactSimultaorWorkBook(String fileName,ImpactSimulatorEvent impSimEvent) {
+	private void createAndLoadImpactSimultaorWorkBook(String fileName,ImpactSimulatorEvent impSimEvent) throws ProjectImportException{
 		try{
 		HSSFWorkbook hwb=new HSSFWorkbook();
 		Connection con = DaoManager.getImpactSimulatorConnection();
@@ -107,15 +132,16 @@ public class DataLoadingEngine {
 		logger.info("Start Loading Summary View");
 		createAndLoadSummaryViewWorkSheet(con, fileName, impSimEvent,hwb);
 		logger.info("Summary View has been loaded");
-		con.close();
-		
-		
+		//con.close();
+		DaoManager.close(con);
+		logger.info("connection closed");
 		}catch(Exception ex){
-			logger.info("connection closed");
+			logger.info(ex.getMessage());
+			throw new ProjectImportException("Exception occured while loading Impact Simulator Data to Excel");
 		}
 	}
 
-	private void createAndLoadStoreTierViewWorkSheet(Connection con,String fileName,ImpactSimulatorEvent impSimEvent, HSSFWorkbook hwb) {
+	private void createAndLoadStoreTierViewWorkSheet(Connection con,String fileName,ImpactSimulatorEvent impSimEvent, HSSFWorkbook hwb) throws ProjectImportException{
 		
 		try{
 			Long noOfRows= 0L;
@@ -205,14 +231,15 @@ public class DataLoadingEngine {
 		}
 			
 		}catch(Exception ex){
-			//
+			logger.info(ex.getMessage());
+			throw new ProjectImportException("Exception occured while loading Impact Simulator Data to Excel");
 		}
 		
 	}
 	
 	
 	
-	private void createAndLoadSummaryViewWorkSheet(Connection con, String fileName,ImpactSimulatorEvent impSimEvent, HSSFWorkbook hwb) {
+	private void createAndLoadSummaryViewWorkSheet(Connection con, String fileName,ImpactSimulatorEvent impSimEvent, HSSFWorkbook hwb) throws ProjectImportException {
 		
 		
 		HSSFCellStyle style = hwb.createCellStyle();
@@ -347,10 +374,11 @@ public class DataLoadingEngine {
 		
 	}catch(Exception ex){
 		logger.info(ex.getMessage());
+		throw new ProjectImportException("Exception occured while loading Impact Simulator Data to Excel");
 	}
 	}
 	
-	private void createAndLoadMenuTierViewWorkSheet(Connection con,String fileName,ImpactSimulatorEvent impSimEvent, HSSFWorkbook hwb) {
+	private void createAndLoadMenuTierViewWorkSheet(Connection con,String fileName,ImpactSimulatorEvent impSimEvent, HSSFWorkbook hwb) throws ProjectImportException {
 		
 		try{
 			//HSSFWorkbook hwb=new HSSFWorkbook();
@@ -450,9 +478,35 @@ public class DataLoadingEngine {
 				logger.info("There are no records present for the resultant query");
 		}
 		}catch(Exception ex){
-			//
+			logger.info(ex.getMessage());
+			throw new ProjectImportException("Exception occured while loading Impact Simulator Data to Excel");
 		}
 		
+	}
+	
+	private String fetchPaQueueNameFromDB(ImpactSimulatorEvent event){
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet rs = null;
+		String returnQueueName = null;
+		String query="SELECT QueueName FROM PricingAnalytics.dbo.Queues where BrandId = ? and Deleted = 0";
+		try{
+			connection = DaoManager.getConnection();
+			preparedStatement = connection.prepareStatement(query);
+			preparedStatement.setInt(1,event.getBrandId());
+			logger.info(preparedStatement.toString());
+			rs = preparedStatement.executeQuery();
+			if (rs.next()) {
+				returnQueueName =  rs.getString("QueueName");
+			}
+		}catch(Exception ex){
+			throw new RuntimeException(ex.getMessage(), ex.fillInStackTrace());
+		}finally {
+			DaoManager.close(rs);
+			DaoManager.close(preparedStatement);
+			DaoManager.close(connection);
+		}
+		return returnQueueName;
 	}
 
 }

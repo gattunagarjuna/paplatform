@@ -16,8 +16,10 @@ import org.apache.log4j.Logger;
 
 
 
+
 import pa.platform.core.PaConfiguration;
 import pa.platform.model.Notification;
+import pa.platform.targeting.exception.ProjectImportException;
 
 import com.sendgrid.Attachments;
 import com.sendgrid.Content;
@@ -69,7 +71,7 @@ public class EmailClient {
 	}
 	
 	
-	public void sendImpactSheetEMail(List<String> filePaths, List<String> fileNames){
+	public void sendImpactSheetEMail(List<String> filePaths, List<String> fileNames) throws ProjectImportException{
 		logger.info("To Email Address : " + notif.getEmailAddress());
 		/*logger.info("notif.getFromAddress()  " + notif.getFromAddress());
 		logger.info("notif.getNotifcationText()  " + notif.getNotifcationText());*/
@@ -122,8 +124,12 @@ public class EmailClient {
 			System.out.println(response.getStatusCode());
 			System.out.println(response.getBody());
 			System.out.println(response.getHeaders());
+			if(response.getStatusCode() >= 500){
+				throw new ProjectImportException("Exception occured while sending impact simulator data over email");
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
+			throw new ProjectImportException("Exception occured while sending impact simulator data over email");
 		}
 		
 	}
