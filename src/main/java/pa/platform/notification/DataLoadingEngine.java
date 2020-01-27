@@ -68,7 +68,7 @@ public class DataLoadingEngine {
 			if(!scenarioIds.isEmpty()){
 				for(BigInteger scenarioId : scenarioIds){
 					logger.info("scenarioId =  "+scenarioId);
-					fileNames.add("ImpactSimulator"+"_"+event.getBrandId()+"_"+event.getProject_Id()+"_"+scenarioId);
+					fileNames.add("ImpactSimulator"+"_"+event.getBrandId()+"_"+event.getProject_Id()+"_"+scenarioId+".xls");
 					String filePath= "/tmp/"+"ImpactSimulator"+"_"+event.getBrandId()+"_"+event.getProject_Id()+"_"+scenarioId+"_"+new Random().nextInt()+".xls" ;
 					filePaths.add(filePath);
 					logger.info("File Path : "+filePath);
