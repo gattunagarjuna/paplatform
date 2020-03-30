@@ -11,6 +11,8 @@ public class ImpactSimulatorEvent extends Event{
 
 	private BigInteger project_Id;
 	private BigInteger scenario_Id;
+	
+	private BigInteger dataEntry_Id;
 
 	
 	
@@ -88,4 +90,13 @@ public class ImpactSimulatorEvent extends Event{
 	}
 
 
+	public BigInteger getDataEntry_Id() {
+		return dataEntry_Id;
+	}
+
+	public void setDataEntry_Id(BigInteger dataEntry_Id) {
+		this.dataEntry_Id = dataEntry_Id;
+	}
+
+	
 }
