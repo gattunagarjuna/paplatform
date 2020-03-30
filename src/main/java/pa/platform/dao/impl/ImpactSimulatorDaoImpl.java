@@ -51,5 +51,41 @@ public class ImpactSimulatorDaoImpl implements ImpactSimulatorDao{
 		
 		return scenarioIds;
 	}
+	
+	@Override
+	public BigInteger getDataEntryId(BigInteger projectId, int brandId) {
+		
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet rs = null;
+		BigInteger dataEntryId = new BigInteger("0");
+		String query="select DataEntryId from dbo.Project where ProjectId = ? and BrandId = ?";
+		
+		try{
+			connection = DaoManager.getImpactSimulatorConnection();
+			preparedStatement = connection.prepareStatement(query);
+			preparedStatement.setLong(1, projectId.longValue());
+			preparedStatement.setInt(2, brandId);
+			logger.info("projectId and brandId from query = "+projectId+" "+brandId);
+			rs = preparedStatement.executeQuery();
+			while(rs.next()){
+				
+				dataEntryId = BigInteger.valueOf(rs.getLong("DataEntryId"));
+				
+				logger.info("Getting DataEntryId from query = "+dataEntryId);
+			}
+			
+		}catch(Exception ex){
+			logger.error("Exception occured while fetching scenarioIds for provided projectId");
+		}finally{
+	
+				DaoManager.close(rs);
+				DaoManager.close(preparedStatement);
+				DaoManager.close(connection);
+			
+		}
+		
+		return dataEntryId;
+	}
 
 }

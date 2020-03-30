@@ -54,6 +54,8 @@ public class DataLoadingEngine {
 		try{
 			ImpactSimulatorDao impactSimulatorDao = new ImpactSimulatorDaoImpl();
 			List<BigInteger> scenarioIds = new ArrayList<BigInteger>();
+			BigInteger dataEntryId = impactSimulatorDao.getDataEntryId(event.getProject_Id(), event.getBrandId());
+			event.setDataEntry_Id(dataEntryId);
 			if(event.getScenario_Id().intValue()==0){
 				logger.info("Fetched associated ScenarioIds for the provided projectId");
 				scenarioIds = impactSimulatorDao.getScenarioIds(event.getProject_Id(), event.getBrandId());
@@ -149,13 +151,14 @@ public class DataLoadingEngine {
 			int endIndex = 100;
 			int rowNo = 0;
 			//Call the SP to get to know whether there are resultant rows
-			String query = "{CALL dbo.StoreTierViewProc(0,1,null,null,null,'Store_Code','ASC',?,?,?)}";
+			String query = "{CALL dbo.StoreTierViewProc(0,1,null,null,null,'Store_Code','ASC',?,?,?,null,?)}";
 			
 			CallableStatement stmt = con.prepareCall(query);
 			
 			stmt.setLong(1, impSimEvent.getScenario_Id().longValue());
 			stmt.setLong(2, impSimEvent.getProject_Id().longValue());
 			stmt.setInt(3, impSimEvent.getBrandId());
+			stmt.setLong(4, impSimEvent.getDataEntry_Id().longValue());
 			
 			ResultSet rs = stmt.executeQuery();
 			if(rs.next()){
@@ -181,6 +184,13 @@ public class DataLoadingEngine {
 				rowhead.createCell((short) 10).setCellValue("Sales_Impact_Percentage");
 				rowhead.createCell((short) 11).setCellValue("Original_Sales");
 				rowhead.createCell((short) 12).setCellValue("Quantity");
+				rowhead.createCell((short) 13).setCellValue("Original_Transaction");
+				rowhead.createCell((short) 14).setCellValue("New_Transaction");
+				rowhead.createCell((short) 15).setCellValue("Transaction_Impact");
+				rowhead.createCell((short) 16).setCellValue("Transaction_Risk");
+				rowhead.createCell((short) 17).setCellValue("Net_Sales_Impact");
+				rowhead.createCell((short) 18).setCellValue("Net_Sales_Impact_Percentage");
+				rowhead.createCell((short) 19).setCellValue("IsChanged");
 				int i =1;
 				do{
 					
@@ -212,6 +222,13 @@ public class DataLoadingEngine {
 					row.createCell((short) 10).setCellValue(rs1.getDouble("Sales_Impact_Percentage"));
 					row.createCell((short) 11).setCellValue(rs1.getDouble("Original_Sales"));
 					row.createCell((short) 12).setCellValue(rs1.getLong("Quantity"));
+					row.createCell((short) 13).setCellValue(rs1.getInt("Original_Transaction"));
+					row.createCell((short) 14).setCellValue(rs1.getDouble("New_Transaction"));
+					row.createCell((short) 15).setCellValue(rs1.getDouble("Transaction_Impact"));
+					row.createCell((short) 16).setCellValue(rs1.getDouble("Transaction_Risk"));
+					row.createCell((short) 17).setCellValue(rs1.getDouble("Net_Sales_Impact"));
+					row.createCell((short) 18).setCellValue(rs1.getDouble("Net_Sales_Impact_Percentage"));
+					row.createCell((short) 19).setCellValue(rs1.getBoolean("isChanged"));
 					i++;
 					}
 					FileOutputStream fileOut =  new FileOutputStream(fileName);
@@ -256,12 +273,13 @@ public class DataLoadingEngine {
 		
 		logger.info("start loading Tier Shift Summary View");
 		HSSFSheet summaryTierViewSheet =  hwb.createSheet("Summary");
-		String summaryTierViewQuery = "{CALL dbo.SummaryTierView(?,?,?)}";
+		String summaryTierViewQuery = "{CALL dbo.SummaryTierView(?,?,?,?)}";
 		CallableStatement summaryTierViewStmt = con.prepareCall(summaryTierViewQuery);
 		
 		summaryTierViewStmt.setLong(1, impSimEvent.getScenario_Id().longValue());
 		summaryTierViewStmt.setLong(2, impSimEvent.getProject_Id().longValue());
 		summaryTierViewStmt.setInt(3, impSimEvent.getBrandId());
+		summaryTierViewStmt.setLong(4, impSimEvent.getDataEntry_Id().longValue());
 		
 		ResultSet summaryTierViewRs = summaryTierViewStmt.executeQuery();
 		
@@ -292,11 +310,12 @@ public class DataLoadingEngine {
 		}
 		
 		logger.info("start loading Categories Summary View");
-		String summaryCategoriesQuery = "{CALL dbo.SummaryCategoryView(?,?,?)}";
+		String summaryCategoriesQuery = "{CALL dbo.SummaryCategoryView(?,?,?,?)}";
 		CallableStatement summaryCategoriesStmt = con.prepareCall(summaryCategoriesQuery);
 		summaryCategoriesStmt.setLong(1, impSimEvent.getScenario_Id().longValue());
 		summaryCategoriesStmt.setLong(2, impSimEvent.getProject_Id().longValue());
 		summaryCategoriesStmt.setInt(3, impSimEvent.getBrandId());
+		summaryTierViewStmt.setLong(4, impSimEvent.getDataEntry_Id().longValue());
 		
 		ResultSet summaryCategoriesRs = summaryCategoriesStmt.executeQuery();
 		
@@ -326,11 +345,13 @@ public class DataLoadingEngine {
 		}
 		
 		logger.info("start loading Price Sensitivity Summary View");
-		String summaryPriceSensitivityQuery = "{CALL dbo.SummaryPriceSensitivity(?,?,?)}";
+		String summaryPriceSensitivityQuery = "{CALL dbo.SummaryPriceSensitivity(?,?,?,?)}";
 		CallableStatement summaryPriceSensitivityStmt = con.prepareCall(summaryPriceSensitivityQuery);
 		summaryPriceSensitivityStmt.setLong(1, impSimEvent.getScenario_Id().longValue());
 		summaryPriceSensitivityStmt.setLong(2, impSimEvent.getProject_Id().longValue());
 		summaryPriceSensitivityStmt.setInt(3, impSimEvent.getBrandId());
+		summaryTierViewStmt.setLong(4, impSimEvent.getDataEntry_Id().longValue());
+		
 		
 		ResultSet summaryPriceSensitivityStmtRs = summaryPriceSensitivityStmt.executeQuery();
 
@@ -424,11 +445,14 @@ public class DataLoadingEngine {
 				rowhead.createCell((short) 13).setCellValue("New_Price");
 				rowhead.createCell((short) 14).setCellValue("Current_Price");
 				rowhead.createCell((short) 15).setCellValue("Quantity_TY");
+				rowhead.createCell((short) 16).setCellValue("Is_Changed");
+				rowhead.createCell((short) 17).setCellValue("Total_Sales_Gross");
+				rowhead.createCell((short) 18).setCellValue("Total_Impact_Percent");
 				int i =1;
 				
 				do{
 				
-				String query1 = "{CALL dbo.MenuitemSelectProc(?,?,null,null,null,null,'Product_ID','ASC',?,?,?)}";
+				String query1 = "{CALL dbo.MenuitemSelectProc(?,?,null,null,null,null,null,'Product_ID','ASC',?,?,?,null,?)}";
 				
 				CallableStatement stmt1 = con.prepareCall(query1);
 				
@@ -438,6 +462,7 @@ public class DataLoadingEngine {
 				stmt1.setLong(3, impSimEvent.getScenario_Id().longValue());
 				stmt1.setLong(4, impSimEvent.getProject_Id().longValue());
 				stmt1.setInt(5, impSimEvent.getBrandId());
+				stmt1.setLong(6, impSimEvent.getDataEntry_Id().longValue());
 				
 				ResultSet rs1 = stmt1.executeQuery();
 				
@@ -462,6 +487,9 @@ public class DataLoadingEngine {
 					row.createCell((short) 13).setCellValue(rs1.getDouble("New_Price"));
 					row.createCell((short) 14).setCellValue(rs1.getDouble("Current_Price"));
 					row.createCell((short) 15).setCellValue(rs1.getLong("Quantity_TY"));
+					row.createCell((short) 16).setCellValue(rs1.getBoolean("isChanged"));
+					row.createCell((short) 17).setCellValue(rs1.getDouble("Total_Sales_Gross"));
+					row.createCell((short) 18).setCellValue(rs1.getDouble("Total_Impact_Percent"));
 					i++;
 					}
 					FileOutputStream fileOut =  new FileOutputStream(fileName);
