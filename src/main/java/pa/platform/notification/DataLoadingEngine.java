@@ -72,6 +72,7 @@ public class DataLoadingEngine {
 					logger.info("scenarioId =  "+scenarioId);
 					fileNames.add("ImpactSimulator"+"_"+event.getBrandId()+"_"+event.getProject_Id()+"_"+scenarioId+".xls");
 					String filePath= "/tmp/"+"ImpactSimulator"+"_"+event.getBrandId()+"_"+event.getProject_Id()+"_"+scenarioId+"_"+new Random().nextInt()+".xls" ;
+					//String filePath= "D:/"+"ImpactSimulator"+"_"+event.getBrandId()+"_"+event.getProject_Id()+"_"+scenarioId+"_"+new Random().nextInt()+".xls" ;
 					filePaths.add(filePath);
 					logger.info("File Path : "+filePath);
 					logger.info("Starttime for data loading in excel file : "+System.currentTimeMillis());
@@ -151,7 +152,7 @@ public class DataLoadingEngine {
 			int endIndex = 100;
 			int rowNo = 0;
 			//Call the SP to get to know whether there are resultant rows
-			String query = "{CALL dbo.StoreTierViewProc(0,1,null,null,null,'Store_Code','ASC',?,?,?,null,?)}";
+			String query = "{CALL dbo.StoreTierViewProc_NEW(0,1,null,null,null,'Store_Code','ASC',?,?,?,null,?)}";
 			
 			CallableStatement stmt = con.prepareCall(query);
 			
@@ -195,7 +196,7 @@ public class DataLoadingEngine {
 				do{
 					
 					logger.info("start fetching data ....");
-					String query1 = "{CALL dbo.StoreTierViewProc(?,?,null,null,null,'Store_Code','ASC',?,?,?)}";
+					String query1 = "{CALL dbo.StoreTierViewProc_NEW(?,?,null,null,null,'Store_Code','ASC',?,?,?,null,?)}";
 				
 					CallableStatement stmt1 = con.prepareCall(query1);
 					stmt1.setInt(1,startIndex);
@@ -204,6 +205,7 @@ public class DataLoadingEngine {
 					stmt1.setLong(3, impSimEvent.getScenario_Id().longValue());
 					stmt1.setLong(4, impSimEvent.getProject_Id().longValue());
 					stmt1.setInt(5, impSimEvent.getBrandId());
+					stmt1.setLong(6, impSimEvent.getDataEntry_Id().longValue());
 					
 					ResultSet rs1 = stmt1.executeQuery();
 					
@@ -273,7 +275,7 @@ public class DataLoadingEngine {
 		
 		logger.info("start loading Tier Shift Summary View");
 		HSSFSheet summaryTierViewSheet =  hwb.createSheet("Summary");
-		String summaryTierViewQuery = "{CALL dbo.SummaryTierView(?,?,?,?)}";
+		String summaryTierViewQuery = "{CALL dbo.SummaryTierView_NEW(?,?,?,?)}";
 		CallableStatement summaryTierViewStmt = con.prepareCall(summaryTierViewQuery);
 		
 		summaryTierViewStmt.setLong(1, impSimEvent.getScenario_Id().longValue());
@@ -310,12 +312,12 @@ public class DataLoadingEngine {
 		}
 		
 		logger.info("start loading Categories Summary View");
-		String summaryCategoriesQuery = "{CALL dbo.SummaryCategoryView(?,?,?,?)}";
+		String summaryCategoriesQuery = "{CALL dbo.SummaryCategoryView_NEW(?,?,?,?)}";
 		CallableStatement summaryCategoriesStmt = con.prepareCall(summaryCategoriesQuery);
 		summaryCategoriesStmt.setLong(1, impSimEvent.getScenario_Id().longValue());
 		summaryCategoriesStmt.setLong(2, impSimEvent.getProject_Id().longValue());
 		summaryCategoriesStmt.setInt(3, impSimEvent.getBrandId());
-		summaryTierViewStmt.setLong(4, impSimEvent.getDataEntry_Id().longValue());
+		summaryCategoriesStmt.setLong(4, impSimEvent.getDataEntry_Id().longValue());
 		
 		ResultSet summaryCategoriesRs = summaryCategoriesStmt.executeQuery();
 		
@@ -345,12 +347,12 @@ public class DataLoadingEngine {
 		}
 		
 		logger.info("start loading Price Sensitivity Summary View");
-		String summaryPriceSensitivityQuery = "{CALL dbo.SummaryPriceSensitivity(?,?,?,?)}";
+		String summaryPriceSensitivityQuery = "{CALL dbo.SummaryPriceSensitivity_NEW(?,?,?,?)}";
 		CallableStatement summaryPriceSensitivityStmt = con.prepareCall(summaryPriceSensitivityQuery);
 		summaryPriceSensitivityStmt.setLong(1, impSimEvent.getScenario_Id().longValue());
 		summaryPriceSensitivityStmt.setLong(2, impSimEvent.getProject_Id().longValue());
 		summaryPriceSensitivityStmt.setInt(3, impSimEvent.getBrandId());
-		summaryTierViewStmt.setLong(4, impSimEvent.getDataEntry_Id().longValue());
+		summaryPriceSensitivityStmt.setLong(4, impSimEvent.getDataEntry_Id().longValue());
 		
 		
 		ResultSet summaryPriceSensitivityStmtRs = summaryPriceSensitivityStmt.executeQuery();
@@ -408,11 +410,12 @@ public class DataLoadingEngine {
 			int startIndex = 0;
 			int endIndex = 100;
 			
-			String query = "{CALL dbo.MenuitemSelectProc(0,1,null,null,null,null,'Product_ID','ASC',?,?,?)}";
+			String query = "{CALL dbo.MenuitemSelectProc_NEW(0,1,null,null,null,null,'Product_ID','ASC',?,?,?,null,?)}";
 			CallableStatement stmt = con.prepareCall(query);
 			stmt.setLong(1, impSimEvent.getScenario_Id().longValue());
 			stmt.setLong(2, impSimEvent.getProject_Id().longValue());
 			stmt.setInt(3, impSimEvent.getBrandId());
+			stmt.setLong(4, impSimEvent.getDataEntry_Id().longValue());
 			
 			ResultSet rs = stmt.executeQuery();
 			if(rs.next()){
@@ -452,7 +455,7 @@ public class DataLoadingEngine {
 				
 				do{
 				
-				String query1 = "{CALL dbo.MenuitemSelectProc(?,?,null,null,null,null,null,'Product_ID','ASC',?,?,?,null,?)}";
+				String query1 = "{CALL dbo.MenuitemSelectProc_NEW(?,?,null,null,null,null,null,'Product_ID','ASC',?,?,?,null,?)}";
 				
 				CallableStatement stmt1 = con.prepareCall(query1);
 				
